@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Calculator</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #1a1a1a;
+        }
+
+        .calculator {
+            width: 350px;
+            padding: 20px;
+            background: #222;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .display {
+            width: 100%;
+            height: 100px;
+            background: #111;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            padding: 20px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: flex-end;
+            overflow: hidden;
+        }
+
+        #display {
+            color: white;
+            font-size: 42px;
+            font-weight: bold;
+            word-break: break-all;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        button {
+            height: 65px;
+            border: none;
+            border-radius: 15px;
+            font-size: 22px;
+            font-weight: bold;
+            cursor: pointer;
+            background: #333;
+            color: white;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            background: #444;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        .operator {
+            background: #ff9500;
+        }
+
+        .operator:hover {
+            background: #ffad33;
+        }
+
+        .special {
+            background: #555;
+        }
+
+        .equal {
+            background: #28a745;
+        }
+
+        .equal:hover {
+            background: #34c759;
+        }
+
+        .zero {
+            grid-column: span 2;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="calculator">
+
+        <!-- Display -->
+        <div class="display">
+            <div id="display">0</div>
+        </div>
+
+        <!-- Calculator Buttons -->
+        <div class="buttons">
+
+            <button class="special" onclick="clearDisplay()">C</button>
+            <button class="special" onclick="deleteLast()">⌫</button>
+            <button class="special" onclick="percentage()">%</button>
+            <button class="operator" onclick="chooseOperator('/')">÷</button>
+
+            <button onclick="appendNumber('7')">7</button>
+            <button onclick="appendNumber('8')">8</button>
+            <button onclick="appendNumber('9')">9</button>
+            <button class="operator" onclick="chooseOperator('*')">×</button>
+
+            <button onclick="appendNumber('4')">4</button>
+            <button onclick="appendNumber('5')">5</button>
+            <button onclick="appendNumber('6')">6</button>
+            <button class="operator" onclick="chooseOperator('-')">−</button>
+
+            <button onclick="appendNumber('1')">1</button>
+            <button onclick="appendNumber('2')">2</button>
+            <button onclick="appendNumber('3')">3</button>
+            <button class="operator" onclick="chooseOperator('+')">+</button>
+
+            <button class="special" onclick="toggleSign()">+/-</button>
+            <button class="zero" onclick="appendNumber('0')">0</button>
+            <button onclick="appendNumber('.')">.</button>
+
+            <button class="equal" onclick="calculate()">=</button>
+
+        </div>
+    </div>
+
+
+    <script>
+
+        let currentValue = "0";
+        let previousValue = null;
+        let operator = null;
+        let waitingForNewValue = false;
+
+        const display = document.getElementById("display");
+
+
+        // Update calculator display
+        function updateDisplay() {
+            display.textContent = currentValue;
+        }
+
+
+        // Add number
+        function appendNumber(number) {
+
+            if (waitingForNewValue) {
+                currentValue = number;
+                waitingForNewValue = false;
+            } 
+            else if (number === "." && currentValue.includes(".")) {
+                return;
+            } 
+            else if (currentValue === "0" && number !== ".") {
+                currentValue = number;
+            } 
+            else {
+                currentValue += number;
+            }
+
+            updateDisplay();
+        }
+
+
+        // Select operator
+        function chooseOperator(selectedOperator) {
+
+            if (operator !== null && !waitingForNewValue) {
+                calculate();
+            }
+
+            previousValue = currentValue;
+            operator = selectedOperator;
+            waitingForNewValue = true;
+        }
+
+
+        // Calculate result
+        function calculate() {
+
+            if (operator === null || previousValue === null) {
+                return;
+            }
+
+            const previous = parseFloat(previousValue);
+            const current = parseFloat(currentValue);
+
+            let result;
+
+            switch (operator) {
+
+                case "+":
+                    result = previous + current;
+                    break;
+
+                case "-":
+                    result = previous - current;
+                    break;
+
+                case "*":
+                    result = previous * current;
+                    break;
+
+                case "/":
+
+                    if (current === 0) {
+                        currentValue = "Error";
+                        previousValue = null;
+                        operator = null;
+                        updateDisplay();
+                        return;
+                    }
+
+                    result = previous / current;
+                    break;
+            }
+
+            currentValue = String(
+                Math.round(result * 100000000) / 100000000
+            );
+
+            previousValue = null;
+            operator = null;
+            waitingForNewValue = true;
+
+            updateDisplay();
+        }
+
+
+        // Clear calculator
+        function clearDisplay() {
+
+            currentValue = "0";
+            previousValue = null;
+            operator = null;
+            waitingForNewValue = false;
+
+            updateDisplay();
+        }
+
+
+        // Delete last character
+        function deleteLast() {
+
+            if (waitingForNewValue) {
+                return;
+            }
+
+            if (currentValue.length === 1) {
+                currentValue = "0";
+            } 
+            else {
+                currentValue = currentValue.slice(0, -1);
+            }
+
+            updateDisplay();
+        }
+
+
+        // Percentage
+        function percentage() {
+
+            currentValue = String(parseFloat(currentValue) / 100);
+
+            updateDisplay();
+        }
+
+
+        // Positive / Negative
+        function toggleSign() {
+
+            if (currentValue === "0") {
+                return;
+            }
+
+            if (currentValue.startsWith("-")) {
+                currentValue = currentValue.slice(1);
+            } 
+            else {
+                currentValue = "-" + currentValue;
+            }
+
+            updateDisplay();
+        }
+
+
+        // Keyboard support
+        document.addEventListener("keydown", function(event) {
+
+            const key = event.key;
+
+            if (!isNaN(key) || key === ".") {
+                appendNumber(key);
+            }
+
+            else if (
+                key === "+" ||
+                key === "-" ||
+                key === "*" ||
+                key === "/"
+            ) {
+                chooseOperator(key);
+            }
+
+            else if (key === "Enter" || key === "=") {
+                calculate();
+            }
+
+            else if (key === "Escape") {
+                clearDisplay();
+            }
+
+            else if (key === "Backspace") {
+                deleteLast();
+            }
+
+            else if (key === "%") {
+                percentage();
+            }
+
+        });
+
+    </script>
+
+</body>
+</html>
